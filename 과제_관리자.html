@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 페이지</title>
+    <link rel="stylesheet" href="./과제스타일.css">
+    <style>
+        body { text-align: center; font-family: sans-serif; }
+        .hidden { display: none; }
+        .admin-box { margin-top: 50px; }
+        .rec-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px; border-bottom: 1px solid #444; background: #202020;
+            max-width: 500px; margin: 5px auto; border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+ <ul>
+ <li><a href="./과제_메인페이지.html">홈</a></li>
+ <li><a href="./과제_노래검색.html">노래 검색</a></li>
+ <li><a href="./과제_플레이리스트.html">플레이리스트</a></li>
+ <li><a href="./과제_추천받은곡리스트.html">추천받았던 곡</a></li>
+ <li class="admin-menu"><a href="./과제_관리자.html">⚙️ 관리자 설정</a></li>
+</ul>
+
+    <div id="loginScreen" class="admin-box">
+        <h2>🔒 관리자 로그인</h2>
+        <input type="password" id="adminPassword" placeholder="비밀번호 (1234)">
+        <button id="loginBtn">로그인</button>
+        <button onclick="location.href='./과제_메인페이지.html'">메인으로 돌아가기</button>
+    </div>
+
+    <div id="settingsScreen" class="admin-box hidden">
+        <h2>⚙️ 오늘의 곡 추천 관리</h2>
+        <input type="text" id="adminTitle" placeholder="곡 제목">
+        <input type="text" id="adminArtist" placeholder="가수 이름">
+        <button id="saveBtn">저장하고 메인으로</button>
+        
+        <hr style="margin: 40px auto; width: 500px;">
+        
+        <h3>현재 추천 목록</h3>
+        <div id="adminRecList"></div>
+    </div>
+
+    <script>
+        const SECRET_PASSWORD = "1234";
+
+        function showSettings() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('settingsScreen').classList.remove('hidden');
+            renderAdminRecList();
+        }
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            if (document.getElementById('adminPassword').value === SECRET_PASSWORD) {
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                showSettings();
+            } else {
+                alert('비밀번호가 틀렸습니다!');
+            }
+        });
+
+        // 저장 로직: previewUrl을 API에서 받아와 함께 저장합니다.
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const title = document.getElementById('adminTitle').value.trim();
+            const artist = document.getElementById('adminArtist').value.trim();
+            if (!title || !artist) return alert('모두 입력해주세요!');
+
+            let albumCover = "";
+            let previewUrl = ""; // 미리듣기 주소 변수 추가
+
+            try {
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist + " " + title)}&entity=song&limit=1`);
+                const data = await res.json();
+                if (data.results.length > 0) {
+                    albumCover = data.results[0].artworkUrl100;
+                    previewUrl = data.results[0].previewUrl || ""; // API 응답에서 미리듣기 주소 가져오기
+                }
+            } catch (e) { console.log("데이터 로드 실패"); }
+
+            localStorage.setItem('mainTitle', title);
+            localStorage.setItem('mainArtist', artist);
+            localStorage.setItem('isAuthorized', 'true');
+
+            let recList = JSON.parse(localStorage.getItem('recommendedSongs') || '[]');
+            
+            // 기존 데이터와 중복되지 않게 추가 (previewUrl 포함)
+            if (!recList.find(s => s.title === title && s.artist === artist)) {
+                recList.push({ title, artist, albumCover, previewUrl });
+                localStorage.setItem('recommendedSongs', JSON.stringify(recList));
+            }
+            
+            alert('저장 완료!');
+            window.location.href = './과제_메인페이지.html';
+        });
+
+        function renderAdminRecList() {
+            const listDiv = document.getElementById('adminRecList');
+            const recList = JSON.parse(localStorage.getItem('recommendedSongs') || '[]');
+            
+            listDiv.innerHTML = recList.map((song, index) => `
+                <div class="rec-item">
+                    <span>${song.title} - ${song.artist}</span>
+                    <button onclick="deleteFromAdmin(${index})" style="background:#e74c3c; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">삭제</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteFromAdmin(index) {
+            let recList = JSON.parse(localStorage.getItem('recommendedSongs') || '[]');
+            recList.splice(index, 1);
+            localStorage.setItem('recommendedSongs', JSON.stringify(recList));
+            renderAdminRecList();
+        }
+
+        window.onload = () => localStorage.removeItem('isAdminLoggedIn');
+    </script>
+</body>
+</html>

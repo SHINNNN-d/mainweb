@@ -1,0 +1,242 @@
+*{
+    background-color: rgb(32, 32, 32);
+    color: white;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    padding-bottom: 130px; /* 맨 아래쪽에 130px만큼의 여백 생성 */
+    box-sizing: border-box;
+}
+
+h1 {
+  margin: 40px;
+  text-align: center;
+}
+
+p {
+  margin: 10px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  justify-content: center;
+
+  background-color: #333333;
+}
+
+ul li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 15px 16px;
+  text-decoration: none;
+  background-color: #333333;
+}
+
+ul li a:hover {
+  background-color: slateblue;
+}
+
+.active {
+  background-color: slateblue;
+}
+
+/* 메인 화면 전체를 화면 중앙에 배치 */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;      /* 가로축 가운데 정렬 */
+    justify-content: center;  /* 세로축 가운데 정렬 */
+    width: 100%;
+    text-align: center;       /* 글자들도 가운데로 */
+}
+
+/* 음악 정보(앨범 아트, 제목, 가수, 가사) 영역 */
+.music-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;      /* 내부 요소들도 모두 가운데로 */
+    width: 100%;
+    max-width: 500px;         /* 너무 넓어지지 않게 최대 폭 설정 */
+}
+
+/* 앨범 커버 이미지 스타일 */
+#mainAlbumCover {
+    width: 100%;
+    max-width: 300px;         /* 이미지 크기 제한 */
+    aspect-ratio: 1 / 1;      /* 정사각형 비율 유지 */
+    object-fit: cover;        /* 비율 깨짐 방지 */
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+}
+
+/* 오디오 플레이어 중앙 배치 */
+#mainAudio {
+    width: 100%;
+    margin: 20px 0;
+}
+
+/* 플레이리스트 추가 버튼 스타일 */
+.playlist-add-btn {
+    background-color: transparent;
+    border: 1px solid blueviolet;
+    color: srgb(76, 56, 206);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 20px; /* 가사 영역과의 간격 */
+}
+
+/*플레이리스트 추가 버튼 눌렀을때 */
+.playlist-add-btn:hover {
+    background-color: rgb(144, 86, 199);
+    color: white;
+}
+
+
+/* 노래 검색창 스타일 */
+.search-box { 
+    margin-bottom: 30px; 
+    text-align: center;
+    display: flex; /* 버튼을 가로로 정렬하기 위해 추가 */
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-box input { 
+    padding: 12px 20px; 
+    width: 300px; 
+    border-radius: 25px; 
+    border: 1px solid #404040; 
+    background: #282828; 
+    color: white; 
+    outline: none;
+}
+
+/* [수정] 검색창 버튼 디자인 */
+.search-box button {
+    padding: 12px 20px;
+    border-radius: 25px;
+    border: none;
+    background-color: blueviolet;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 0; /* flex로 정렬하므로 margin 제거 */
+}
+.search-box button:hover{
+    background-color: rgb(144, 86, 199);
+}
+
+/* 노래 검색 결과 아이템 디자인 변경 */
+.song-item {
+    display: flex;
+    align-items: center;
+    background-color: transparent; /* 배경색 제거하여 네모칸 느낌 없앰 */
+    padding: 15px 20px;
+    margin: 10px auto;
+    border-bottom: 1px solid #333; /* 아래쪽에 연한 선만 남겨서 구분 */
+    gap: 20px;
+    width: 100%;
+    max-width: 600px;
+}
+
+.song-item img { border-radius: 8px; width: 60px; height: 60px; }
+
+/* 제목/가수 영역 */
+.song-info {
+    flex-grow: 1;
+    background-color: transparent !important; 
+    padding: 0 15px !important;
+}
+
+.song-info h4 { margin: 0; color: #fff; font-size: 16px; }
+.song-info p { margin: 4px 0 0 0; color: #b3b3b3; font-size: 14px; }
+
+/* 담기 버튼 */
+.add-btn {
+    white-space: nowrap;      /* 줄바꿈 금지 */
+    background-color: transparent;
+    border: 1px solid blueviolet;
+    color: srgb(76, 56, 206);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.add-btn:hover{
+    background-color: rgb(144, 86, 199);
+}
+
+/* 노래 검색 후 재생 버튼 */
+.play-btn {
+    background-color: #404040;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.play-btn:hover {
+    background-color: #606060;
+}
+
+/* 플레이리스트 */
+#playlistArea {
+    max-width: 800px; 
+    margin: 0 auto; 
+    padding: 20px;
+}
+
+.playlist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #444;
+    gap: 15px;
+}
+
+.song-info { 
+    flex-grow: 1; 
+    margin: 0 15px; 
+    text-align: left; 
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-group button {
+    white-space: nowrap;
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+}
+
+
+/* 삭제 버튼 별도 색상 */
+.delete-btn {
+    white-space: nowrap;
+    background-color: #e74c3c;
+    color: white;
+}

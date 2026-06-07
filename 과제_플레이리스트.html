@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>플레이리스트</title>
+    <link rel="stylesheet" href="./과제스타일.css">
+</head>
+<body>
+
+<ul>
+  <li><a href="./과제_메인페이지.html">홈</a></li>
+  <li><a href="./과제_노래검색.html">노래 검색</a></li>
+  <li><a class="active" href="./과제_플레이리스트.html">플레이리스트</a></li>
+  <li><a href="./과제_추천받은곡리스트.html">추천받았던 곡</a></li>
+  <li class="admin-menu"><a href="./과제_관리자.html">⚙️ 관리자 설정</a></li>
+</ul>
+
+<h1 style="text-align: center;">🎼 내 플레이리스트</h1>
+<div id="playlistArea"></div>
+
+<div id="playerArea" style="
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #202020;
+    padding: 25px 0;
+    border-top: 2px solid slateblue;
+    text-align: center;
+    z-index: 1000;
+">
+    <h3 id="nowPlaying" style="margin: 0 0 15px 0; font-size: 18px; color: white;">곡을 선택해주세요</h3>
+    
+    <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
+        <span id="currentTime" style="font-size: 14px; width: 50px; color: white;">0:00</span>
+        <input type="range" id="progressRange" value="0" max="100" style="width: 500px; height: 8px; cursor: pointer; accent-color: slateblue;">
+        <span id="durationTime" style="font-size: 14px; width: 50px; color: white;">0:00</span>
+        
+        <span style="font-size: 20px;">🔊</span>
+        <input type="range" id="volumeRange" value="100" max="100" style="width: 120px; height: 8px; accent-color: slateblue;">
+    </div>
+    
+    <button id="playPauseBtn" onclick="togglePlay()" style="
+        background: slateblue; 
+        border: none; 
+        color: white; 
+        padding: 12px 40px; 
+        font-size: 16px;
+        border-radius: 50px; 
+        cursor: pointer;
+        font-weight: bold;
+    ">▶ 재생</button>
+    <audio id="mainAudio"></audio>
+</div>
+
+<script>
+    let playlist = JSON.parse(localStorage.getItem('myPlaylist') || '[]');
+    const playlistArea = document.getElementById('playlistArea');
+    const mainAudio = document.getElementById('mainAudio');
+    const nowPlaying = document.getElementById('nowPlaying');
+    const progressRange = document.getElementById('progressRange');
+    const volumeRange = document.getElementById('volumeRange');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const currentTimeText = document.getElementById('currentTime');
+    const durationTimeText = document.getElementById('durationTime');
+
+    function renderPlaylist() {
+        playlistArea.innerHTML = "";
+        playlist.forEach((song, index) => {
+            const item = document.createElement('div');
+            item.className = 'playlist-item';
+            // 데이터가 없으면 빈 문자열로 안전하게 처리
+            const preview = song.previewUrl || '';
+            item.innerHTML = `
+                <img src="${song.albumCover}" width="50" style="border-radius:5px;">
+                <div class="song-info">${song.title} - ${song.artist}</div>
+                <div class="btn-group">
+                    <button onclick="playSong('${song.title.replace(/'/g, "\\'")}', '${song.artist.replace(/'/g, "\\'")}', '${preview}')">▶ 재생</button>
+                    <button onclick="removeSong(${index})" style="background:#e74c3c; border:none; color:white; padding:5px 10px; border-radius:5px;">삭제</button>
+                </div>
+            `;
+            playlistArea.appendChild(item);
+        });
+    }
+
+    // 재생 함수: 빈 값 체크를 더 명확하게 함
+    function playSong(title, artist, url) {
+        if (!url || url === 'undefined' || url.trim() === '') {
+            alert("죄송합니다. 이 곡은 미리듣기를 제공하지 않는 곡입니다.");
+            return;
+        }
+        nowPlaying.innerText = `${title} - ${artist}`;
+        mainAudio.src = url;
+        mainAudio.play();
+        playPauseBtn.innerText = "|| 일시정지";
+    }
+
+    function togglePlay() {
+        if (mainAudio.paused) { mainAudio.play(); playPauseBtn.innerText = "|| 일시정지"; }
+        else { mainAudio.pause(); playPauseBtn.innerText = "▶ 재생"; }
+    }
+
+    function removeSong(index) {
+        playlist.splice(index, 1);
+        localStorage.setItem('myPlaylist', JSON.stringify(playlist));
+        renderPlaylist();
+    }
+
+    mainAudio.addEventListener('timeupdate', () => {
+        const progress = (mainAudio.currentTime / mainAudio.duration) * 100;
+        progressRange.value = progress || 0;
+        const curMin = Math.floor(mainAudio.currentTime / 60);
+        const curSec = Math.floor(mainAudio.currentTime % 60);
+        currentTimeText.innerText = `${curMin}:${curSec < 10 ? '0' + curSec : curSec}`;
+    });
+
+    mainAudio.addEventListener('loadedmetadata', () => {
+        const durMin = Math.floor(mainAudio.duration / 60);
+        const durSec = Math.floor(mainAudio.duration % 60);
+        durationTimeText.innerText = `${durMin}:${durSec < 10 ? '0' + durSec : durSec}`;
+    });
+
+    progressRange.addEventListener('input', () => {
+        mainAudio.currentTime = (progressRange.value / 100) * mainAudio.duration;
+    });
+
+    volumeRange.addEventListener('input', () => {
+        mainAudio.volume = volumeRange.value / 100;
+    });
+
+    mainAudio.addEventListener('ended', () => {
+        const currentTitle = nowPlaying.innerText.split(' - ')[0];
+        const currentIndex = playlist.findIndex(s => s.title === currentTitle);
+        if (currentIndex !== -1 && currentIndex < playlist.length - 1) {
+            const next = playlist[currentIndex + 1];
+            playSong(next.title, next.artist, next.previewUrl);
+        } else {
+            alert("플레이리스트의 마지막 곡입니다.");
+            playPauseBtn.innerText = "▶ 재생";
+        }
+    });
+
+    renderPlaylist();
+</script>
+</body>
+</html>

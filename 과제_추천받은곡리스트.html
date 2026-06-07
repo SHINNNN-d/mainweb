@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>추천받았던 곡</title>
+    <link rel="stylesheet" href="./과제스타일.css">
+</head>
+<body>
+    <ul>
+        <li><a href="./과제_메인페이지.html">홈</a></li>
+        <li><a href="./과제_노래검색.html">노래 검색</a></li>
+        <li><a href="./과제_플레이리스트.html">플레이리스트</a></li>
+        <li><a class="active" href="./과제_추천받은곡리스트.html">추천받았던 곡</a></li>
+        <li class="admin-menu"><a href="./과제_관리자.html">⚙️ 관리자 설정</a></li>
+    </ul>
+
+    <main class="main-content">
+        <h1>⭐ 추천받았던 곡</h1>
+        <div id="recArea"></div>
+    </main>
+
+    <script>
+        function renderList() {
+            const recArea = document.getElementById('recArea');
+            const recList = JSON.parse(localStorage.getItem('recommendedSongs') || '[]');
+            
+            recArea.innerHTML = "";
+
+            if (recList.length === 0) {
+                recArea.innerHTML = "<p>아직 등록된 추천곡이 없습니다.</p>";
+                return;
+            }
+
+            recList.forEach((song) => {
+                const div = document.createElement('div');
+                div.className = 'song-item';
+                
+                // 데이터가 없을 경우 빈 문자열로 처리하여 에러 방지
+                const preview = song.previewUrl || ''; 
+                
+                div.innerHTML = `
+                    <img src="${song.albumCover || ''}" width="60" style="border-radius:8px;">
+                    <div class="song-info">
+                        <h4>${song.title}</h4>
+                        <p>${song.artist}</p>
+                    </div>
+                    <button class="add-btn" onclick="addToPlaylist('${song.title.replace(/'/g, "\\'")}', '${song.artist.replace(/'/g, "\\'")}', '${song.albumCover || ''}', '${preview}')">
+                        ❤️ 플레이리스트에 추가
+                    </button>
+                `;
+                recArea.appendChild(div);
+            });
+        }
+
+        function addToPlaylist(title, artist, albumCover, previewUrl) {
+            const playlist = JSON.parse(localStorage.getItem('myPlaylist') || '[]');
+            
+            // 중복 곡 확인
+            if (playlist.find(s => s.title === title)) {
+                alert("이미 담긴 곡입니다!");
+                return;
+            }
+            
+            // previewUrl이 'undefined' 문자열로 저장되는 것을 방지
+            const finalPreviewUrl = (previewUrl === 'undefined' || previewUrl === 'null') ? '' : previewUrl;
+            
+            playlist.push({ 
+                title: title, 
+                artist: artist, 
+                albumCover: albumCover, 
+                previewUrl: finalPreviewUrl 
+            });
+            
+            localStorage.setItem('myPlaylist', JSON.stringify(playlist));
+            alert("플레이리스트에 추가되었습니다!");
+        }
+
+        renderList();
+    </script>
+</body>
+</html>

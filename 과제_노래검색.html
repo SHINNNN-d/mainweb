@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>노래 검색</title>
+    <link rel="stylesheet" href="./과제스타일.css">
+</head>
+<body>
+    <ul>
+        <li><a href="./과제_메인페이지.html">홈</a></li>
+        <li><a class="active" href="./과제_노래검색.html">노래 검색</a></li>
+        <li><a href="./과제_플레이리스트.html">플레이리스트</a></li>
+        <li><a href="./과제_추천받은곡리스트.html">추천받았던 곡</a></li>
+        <li class="admin-menu"><a href="./과제_관리자.html">⚙️ 관리자 설정</a></li>
+    </ul>
+
+    <main class="main-content">
+        <h1>🎵 음악 검색</h1>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="가수, 장르, 분위기를 입력하세요">
+            <button onclick="searchMusic()">검색</button>
+        </div>
+        <div id="resultsArea" class="results-container"></div>
+    </main>
+
+    <script>
+        let currentAudio = null;
+        let currentBtn = null;
+
+        async function searchMusic() {
+            const query = document.getElementById('searchInput').value;
+            const resultsArea = document.getElementById('resultsArea');
+            if (!query) return alert("검색어를 입력해주세요!");
+            
+            resultsArea.innerHTML = "<p>음악을 찾는 중...</p>";
+
+            try {
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=5`);
+                const data = await res.json();
+                
+                resultsArea.innerHTML = "";
+                if (data.results.length === 0) return resultsArea.innerHTML = "<p>검색 결과가 없습니다.</p>";
+
+                data.results.forEach(song => {
+                    const div = document.createElement('div');
+                    div.className = 'song-item';
+                    const audioUrl = song.previewUrl || '';
+                    
+                    div.innerHTML = `
+                        <img src="${song.artworkUrl100}" width="60" alt="앨범">
+                        <div class="song-info">
+                            <h4>${song.trackName}</h4>
+                            <p>${song.artistName}</p>
+                        </div>
+                        <button class="play-btn" onclick="playPreview(this, '${audioUrl}')">▶ 재생</button>
+                        <button class="add-btn" onclick="addToPlaylist('${song.trackName.replace(/'/g, "\\'")}', '${song.artistName.replace(/'/g, "\\'")}', '${song.artworkUrl100}', '${audioUrl}')">❤️ 플레이리스트에 추가</button>
+                    `;
+                    resultsArea.appendChild(div);
+                });
+            } catch (e) {
+                resultsArea.innerHTML = "<p>검색 오류가 발생했습니다.</p>";
+            }
+        }
+
+        function playPreview(btnElement, url) {
+            if (!url) return alert("미리듣기를 제공하지 않는 곡입니다.");
+
+            // 이미 재생 중인 것이 있다면 멈춤
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                if (currentBtn) currentBtn.innerText = '▶ 재생';
+            }
+
+            // 같은 버튼을 다시 눌렀을 때 (정지 처리)
+            if (currentBtn === btnElement) {
+                currentAudio = null;
+                currentBtn = null;
+                return;
+            }
+
+            // 새로운 노래 재생
+            currentAudio = new Audio(url);
+            currentBtn = btnElement;
+            currentAudio.play();
+            btnElement.innerText = '■ 정지';
+
+            // 노래 종료 시 자동 복구
+            currentAudio.onended = () => {
+                btnElement.innerText = '▶ 재생';
+                currentAudio = null;
+                currentBtn = null;
+            };
+        }
+
+    function addToPlaylist(title, artist, albumCover, previewUrl) {
+    const playlist = JSON.parse(localStorage.getItem('myPlaylist') || '[]');
+    if (playlist.find(s => s.title === title)) return alert("이미 담긴 곡입니다!");
+    
+    playlist.push({ title, artist, albumCover, previewUrl });
+    localStorage.setItem('myPlaylist', JSON.stringify(playlist));
+    alert("플레이리스트에 추가되었습니다!");
+    }
+
+    </script>
+</body>
+</html>
