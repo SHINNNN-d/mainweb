@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>메인 페이지</title>
+    <link rel="stylesheet" href="./과제스타일.css">
+</head>
+<body>
+
+
+<ul>
+  <li><a class="active" href="./과제_메인페이지.html">홈</a></li>
+  <li><a href="./과제_노래검색.html">노래 검색</a></li>
+  <li><a href="./과제_플레이리스트.html">플레이리스트</a></li>
+  <li><a href="./과제_추천받은곡리스트.html">추천받았던 곡</a></li>
+  <li class="admin-menu"><a href="./과제_관리자.html">⚙️ 관리자 설정</a></li>
+</ul>
+<h1>오늘의 추천 곡</h1>
+
+<main class="main-content">
+    <h2 id="welcomeMsg" class="welcome-msg">관리자 설정을 통해 오늘의 곡을 등록해주세요!</h2>
+    <div id="mainLoading" class="hidden"></div>
+
+    <div id="musicContent" class="music-content hidden">
+    <img id="mainAlbumCover" src="" alt="앨범 커버">
+    <h1 id="mainTitle">제목</h1>
+    <p id="mainArtist">가수</p>
+    
+    <audio id="mainAudio" controls controlsList="nodownload"></audio>
+    
+    <button id="addPlaylistBtn" class="playlist-add-btn">❤️ 플레이리스트 추가</button>
+    
+    <div class="lyrics-container">
+        <h3>가사</h3>
+        <div id="mainLyrics">가사가 여기에 표시됩니다.</div>
+    </div>
+</div>
+
+<script>
+    // 플레이리스트 추가 버튼 클릭 이벤트
+    document.getElementById('addPlaylistBtn').addEventListener('click', () => {
+        const title = document.getElementById('mainTitle').innerText;
+        const artist = document.getElementById('mainArtist').innerText;
+        const albumCover = document.getElementById('mainAlbumCover').src;
+        
+        // 오디오 태그에서 현재 재생 주소(src)를 가져옵니다.
+        const previewUrl = document.getElementById('mainAudio').src;
+
+        const playlist = JSON.parse(localStorage.getItem('myPlaylist') || '[]');
+        
+        if (playlist.find(song => song.title === title)) {
+            alert("이미 플레이리스트에 담긴 곡입니다!");
+            return;
+        }
+
+        // previewUrl을 함께 객체에 담습니다.
+        playlist.push({ title, artist, albumCover, previewUrl });
+        localStorage.setItem('myPlaylist', JSON.stringify(playlist));
+        
+        alert("성공적으로 추가되었습니다!");
+    });
+</script>
+</main>
+
+<script>
+    // DOM 요소 선택
+    const welcomeMsg = document.getElementById('welcomeMsg');
+    const musicContent = document.getElementById('musicContent');
+    const mainLoading = document.getElementById('mainLoading');
+
+    // 저장된 음악 정보를 불러와서 화면에 띄우는 함수 (기존 코드와 완전히 동일)
+    async function loadMainMusic() {
+    const title = localStorage.getItem('mainTitle');
+    const artist = localStorage.getItem('mainArtist');
+    
+    // 1. 데이터가 아예 없을 때의 예외 처리
+    if (!title || !artist) {
+        welcomeMsg.style.display = 'block';
+        musicContent.classList.add('hidden');
+        mainLoading.classList.add('hidden'); // 로딩 숨기기
+        return;
+    }
+
+    // 2. 데이터가 있을 때만 로딩 시작
+    welcomeMsg.style.display = 'none';
+    musicContent.classList.add('hidden');
+    mainLoading.classList.remove('hidden');
+
+        try {
+            const searchTerm = encodeURIComponent(`${artist} ${title}`);
+            const itunesRes = await fetch(`https://itunes.apple.com/search?term=${searchTerm}&entity=song&limit=1`);
+            const itunesData = await itunesRes.json();
+
+            if (itunesData.results.length === 0) throw new Error("검색 결과가 없습니다.");
+
+            const track = itunesData.results[0];
+            const albumCoverUrl = track.artworkUrl100.replace('100x100bb', '600x600bb');
+
+            let lyrics = "가사를 찾을 수 없습니다.";
+            try {
+    const lyricsRes = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`);
+    const lyricsData = await lyricsRes.json();
+    
+    // 콘솔창(F12)에 가사가 뜨는지 확인
+    console.log("가사 데이터:", lyricsData.lyrics); 
+    
+    if (lyricsData.lyrics) lyrics = lyricsData.lyrics;
+} catch (e) { 
+    console.log("가사 조회 실패"); 
+}
+
+            document.getElementById('mainAlbumCover').src = albumCoverUrl;
+            document.getElementById('mainTitle').innerText = track.trackName;
+            document.getElementById('mainArtist').innerText = track.artistName;
+            document.getElementById('mainAudio').src = track.previewUrl;
+            document.getElementById('mainLyrics').innerText = lyrics;
+
+            mainLoading.classList.add('hidden');
+            musicContent.classList.remove('hidden');
+
+        } catch (error) {
+            alert("음악을 불러오는 데 실패했습니다.");
+            mainLoading.classList.add('hidden');
+            welcomeMsg.style.display = 'block';
+        }
+    }
+
+    loadMainMusic();
+</script>
